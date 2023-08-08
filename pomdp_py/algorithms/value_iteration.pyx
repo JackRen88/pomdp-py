@@ -10,6 +10,7 @@ from pomdp_py.framework.basics cimport Agent, Action, State
 import numpy as np
 import itertools
 
+'''_PolicyTreeNode: PolicyTree root node'''
 cdef class _PolicyTreeNode:
 
     cdef public Action action
@@ -17,13 +18,15 @@ cdef class _PolicyTreeNode:
     cdef public dict children, values
     cdef Agent _agent
     cdef float _discount_factor
-
+    cdef list children_keys
+    
     def __init__(self, action, depth, agent,
                  discount_factor, children={}):
         self.action = action
         self.depth = depth
         self._agent = agent
         self.children = children
+        self.children_keys=list(self.children.keys())
         self._discount_factor = discount_factor
         self.values = self._compute_values()  # s -> value
 
@@ -49,7 +52,7 @@ cdef class _PolicyTreeNode:
                     else:
                         subtree_value = 0.0
                     reward = self._agent.reward_model.sample(s, self.action, sp)
-                    expected_future_value += trans_prob * obsrv_prob * (reward + discount_factor*subtree_value)
+                    expected_future_value += trans_prob * obsrv_prob * (reward + discount_factor*subtree_value)#?
             values[s] = expected_future_value
         return values
 
