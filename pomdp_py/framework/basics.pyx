@@ -27,8 +27,8 @@ cdef class Distribution:
 
 cdef class GenerativeDistribution(Distribution):
     """A GenerativeDistribution is a Distribution that additionally exhibits
-    generative properties. That is, it supports :meth:`argmax` (or :meth:`mpe`)
-    and :meth:`random` functions.  """
+    generative properties. That is, it supports :math:`argmax` (or :math:`mpe`)
+    and :math:`random` functions.  """
     def argmax(self):
         """
         argmax(self)
@@ -322,7 +322,7 @@ cdef class Agent:
     observations, and updating its belief. Taking actions is the job of a
     planner (:class:`Planner`), and the belief update is the job taken care of
     by the belief representation or the planner. But, the Agent supplies the
-    :class:`TransitionModel`, :class:`ObservationModel`, :class:`RewardModel`,
+    :class:`TransitionModel`, :class:`ObservationModel`, :class:`RewardModel`,·
     OR :class:`BlackboxModel` to the planner or the belief update algorithm.
 
     __init__(self, init_belief,

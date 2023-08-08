@@ -1,3 +1,11 @@
+'''
+Copyright (c) 2023 by GAC, All Rights Reserved. 
+Author: renchengjin
+Date: 2023-08-07 09:51:00
+LastEditors: JackRen
+LastEditTime: 2023-08-07 13:39:54
+Description: 
+'''
 import pomdp_py.utils as util
 
 # Framework
