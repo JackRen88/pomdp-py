@@ -39,21 +39,23 @@ cdef class _PolicyTreeNode:
         observations = self._agent.all_observations
         states = self._agent.all_states
 
-        discount_factor = self._discount_factor**self.depth
+        discount_factor = self._discount_factor#**self.depth
         values = {}
         for s in states:
             expected_future_value = 0.0
+            reward = self._agent.reward_model.sample(s, self.action, None)
             for sp in states:
+                trans_prob = self._agent.transition_model.probability(sp, s, self.action)
+                obsrv_value = 0.0
                 for o in observations:
-                    trans_prob = self._agent.transition_model.probability(sp, s, self.action)
                     obsrv_prob = self._agent.observation_model.probability(o, sp, self.action)
                     if len(self.children) > 0:
                         subtree_value = self.children[o].values[sp]  # corresponds to V_{oi(p)} in paper
                     else:
                         subtree_value = 0.0
-                    reward = self._agent.reward_model.sample(s, self.action, sp)
-                    expected_future_value += trans_prob * obsrv_prob * (reward + discount_factor*subtree_value)
-            values[s] = expected_future_value
+                    obsrv_value += obsrv_prob * subtree_value
+                expected_future_value += trans_prob * obsrv_value 
+            values[s] = reward + discount_factor * expected_future_value
         return values
 
     def __str__(self):
