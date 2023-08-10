@@ -52,7 +52,7 @@ cdef class _PolicyTreeNode:
                     else:
                         subtree_value = 0.0
                     reward = self._agent.reward_model.sample(s, self.action, sp)
-                    expected_future_value += trans_prob * obsrv_prob * (reward + discount_factor*subtree_value)#?
+                    expected_future_value += trans_prob * obsrv_prob * (reward + discount_factor*subtree_value)
             values[s] = expected_future_value
         return values
 
@@ -75,6 +75,7 @@ cdef class ValueIteration(Planner):
     def __init__(self, horizon, discount_factor=0.9, epsilon=1e-6):
         """
         The horizon satisfies discount_factor**horizon > epsilon"""
+        super().__init__("ValueIteration")
         assert type(horizon) == int and horizon >= 1, "Horizon must be an integer >= 1"
         self._discount_factor = discount_factor
         self._epsilon = epsilon

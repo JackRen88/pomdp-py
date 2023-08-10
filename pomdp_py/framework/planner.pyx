@@ -13,6 +13,8 @@ cdef class Planner:
     You can implement a Planner that is specific to an agent, or not. If specific, then
     when calling :meth:`plan` the agent passed in is expected to always be the same one.
     """
+    def __init__(self, name): 
+      self._name = name
     cpdef public plan(self, Agent agent):
         """
         plan(self, Agent agent)
@@ -27,6 +29,8 @@ cdef class Planner:
         Updates the agent accordingly if necessary. If the agent's
         belief is also updated here, the `update_agent_belief`
         attribute should be set to True. By default, does nothing."""
+
+        print("%s is update belief state,but not implement." % self._name)
         pass
 
     def updates_agent_belief(self):

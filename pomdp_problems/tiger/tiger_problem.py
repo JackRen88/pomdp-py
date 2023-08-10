@@ -124,7 +124,7 @@ class ObservationModel(pomdp_py.ObservationModel):
 class TransitionModel(pomdp_py.TransitionModel):
     def probability(self, next_state, state, action):
         """According to problem spec, the world resets once
-        action is open-left/open-right. Otherwise, stays the same"""
+        action is open-left/open-right. Otherwise, world state stays the same"""
         if action.name.startswith("open"):
             return 0.5
         else:
@@ -248,8 +248,8 @@ def test_planner(tiger_problem, planner, nsteps=3,
         print("True state:", tiger_problem.env.state)
         print("Belief:", tiger_problem.agent.cur_belief)
         print("Action:", action)
-        # There is no state transition for the tiger domain.
-        # In general, the ennvironment state can be transitioned
+        # There is state transition for the tiger domain.
+        # In general, the environment state can be transitioned
         # using
         #
         #   reward = tiger_problem.env.state_transition(action, execute=True)
@@ -264,14 +264,14 @@ def test_planner(tiger_problem, planner, nsteps=3,
 
         # Let's create some simulated real observation;
         # Here, we use observation based on true state for sanity
-        # checking solver behavior. In general, this observation
+        # checking solver behavior. In general, this real observation
         # should be sampled from agent's observation model, as
         #
         #    real_observation = tiger_problem.agent.observation_model.sample(tiger_problem.env.state, action)
         #
         # or coming from an external source (e.g. robot sensor
-        # reading). Note that tiger_problem.env.state stores the
-        # environment state after action execution.
+        # reading). Note that here tiger_problem.env.state stores the
+        # environment state after action execution
         real_observation = TigerObservation(tiger_problem.env.state.name)
         print(">> Observation:",  real_observation)
         tiger_problem.agent.update_history(action, real_observation)
@@ -291,6 +291,7 @@ def test_planner(tiger_problem, planner, nsteps=3,
                 tiger_problem.agent.observation_model,
                 tiger_problem.agent.transition_model)
             tiger_problem.agent.set_belief(new_belief)
+            # print("new_belief: ",new_belief)
 
         if action.name.startswith("open"):
             # Make it clearer to see what actions are taken
@@ -307,7 +308,7 @@ def main():
 
     print("** Testing value iteration **")
     vi = pomdp_py.ValueIteration(horizon=3, discount_factor=0.95)
-    test_planner(tiger_problem, vi, nsteps=3)
+    test_planner(tiger_problem, vi, nsteps=10)
 
     # Reset agent belief
     # tiger_problem.agent.set_belief(init_belief, prior=True)

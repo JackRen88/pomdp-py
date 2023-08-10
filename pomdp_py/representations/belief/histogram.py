@@ -39,9 +39,9 @@ def update_histogram_belief(current_histogram,
             This thus helps reduce the computation cost by avoiding the nested iteration
             over the state space; But still, updating histogram belief requires
             iteration of the state space, which may already be prohibitive.
-        next_state_space (set) the state space of the updated belief. By default,
-            this parameter is None and the state space given by current_histogram
-            will be directly considered as the state space of the updated belief.
+        next_state_space (set) the true state space of the updated belief. By default,
+            this parameter is None and the true state space given by current_histogram
+            will be directly considered as the true state space of the updated belief.
             This is useful for space and time efficiency in problems where the state
             space contains parts that the agent knows will deterministically update,
             and thus not keeping track of the belief over these states.
