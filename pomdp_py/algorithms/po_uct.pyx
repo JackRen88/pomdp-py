@@ -18,7 +18,7 @@ distribution.
 
 A note on the exploration constant. Quote from :cite:`gusmao2012towards`:
 
-    "This constant should reflect the agent’s prior knowledge regarding
+    "This constant should reflect the agent's prior knowledge regarding
     the amount of exploration required."
 
 In the POMCP paper, they set this constant following:
@@ -31,6 +31,15 @@ It is then clear that the POMCP paper is indeed setting this constant
 based on prior knowledge. Note the difference between `sample runs` and
 `sample rollouts`. But, this is certainly not the only way to obtainx1
 the prior knowledge.
+"""
+
+"""
+Belief Update
+This solver does not reuse decision-making simulations for the belief update as in the original Silver and Veness paper. We have found that unweighted particle filtering approach to be unuseful in practice because
+
+The number of particles that comprise the next belief is small because only the particles in the branch corresponding to the actual action and observation can be used,
+Even in the Silver and Veness paper, domain-specific particle reinvigoration must be used, and
+The computation time required to run a standard weighted particle filter is small compared to the amount of time needed to plan with POMCP, so reusing the simulations gives minimal benefit.
 """
 
 from pomdp_py.framework.basics cimport Action, Agent, POMDP, State, Observation,\
