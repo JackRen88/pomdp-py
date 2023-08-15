@@ -311,15 +311,15 @@ def main():
     test_planner(tiger_problem, vi, nsteps=10)
 
     # Reset agent belief
-    # tiger_problem.agent.set_belief(init_belief, prior=True)
+    tiger_problem.agent.set_belief(init_belief, prior=True)
 
-    # print("\n** Testing POUCT **")
-    # pouct = pomdp_py.POUCT(max_depth=3, discount_factor=0.95,
-    #                        num_sims=4096, exploration_const=50,
-    #                        rollout_policy=tiger_problem.agent.policy_model,
-    #                        show_progress=True)
-    # test_planner(tiger_problem, pouct, nsteps=10)
-    # TreeDebugger(tiger_problem.agent.tree).pp
+    print("\n** Testing POUCT **")
+    pouct = pomdp_py.POUCT(max_depth=3, discount_factor=0.95,
+                           num_sims=4096, exploration_const=50,
+                           rollout_policy=tiger_problem.agent.policy_model,
+                           show_progress=True)
+    test_planner(tiger_problem, pouct, nsteps=10)
+    TreeDebugger(tiger_problem.agent.tree).pp
 
     # # Reset agent belief
     # tiger_problem.agent.set_belief(init_belief, prior=True)

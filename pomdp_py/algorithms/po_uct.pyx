@@ -29,7 +29,7 @@ In the POMCP paper, they set this constant following:
 
 It is then clear that the POMCP paper is indeed setting this constant
 based on prior knowledge. Note the difference between `sample runs` and
-`sample rollouts`. But, this is certainly not the only way to obtainx1
+`sample rollouts`. But, this is certainly not the only way to obtain
 the prior knowledge.
 """
 
