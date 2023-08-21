@@ -326,23 +326,23 @@ def main():
     crying_baby_problem = CryingBabyProblem(0.2, 0.1, # when full or hungry observation noise
                                  init_true_state, init_belief)
 
-    print("** Testing value iteration **")
+    # print("** Testing value iteration **")
     #horizon is too large to compute expensive ,
     # because layer level of tree is too big,
     # resulting in getting too much policy tree,so need to prune tree.
     # here in general,horizon = 3
-    vi = pomdp_py.ValueIteration(horizon=3, discount_factor=0.95)
-    test_planner(crying_baby_problem, vi, nsteps=10)
+    # vi = pomdp_py.ValueIteration(horizon=3, discount_factor=0.95)
+    # test_planner(crying_baby_problem, vi, nsteps=10)
 
     # Reset agent belief
-    # tiger_problem.agent.set_belief(init_belief, prior=True)
+    crying_baby_problem.agent.set_belief(init_belief, prior=True)
 
-    # print("\n** Testing POUCT **")
-    # pouct = pomdp_py.POUCT(max_depth=3, discount_factor=0.95,
-    #                        num_sims=4096, exploration_const=50,
-    #                        rollout_policy=tiger_problem.agent.policy_model,
-    #                        show_progress=True)
-    # test_planner(tiger_problem, pouct, nsteps=10)
+    print("\n** Testing POUCT **")
+    pouct = pomdp_py.POUCT(max_depth=5, discount_factor=0.95,
+                           num_sims=4096, exploration_const=50,
+                           rollout_policy=crying_baby_problem.agent.policy_model,
+                           show_progress=True)
+    test_planner(crying_baby_problem, pouct, nsteps=10)
     # TreeDebugger(tiger_problem.agent.tree).pp
 
     # # Reset agent belief
