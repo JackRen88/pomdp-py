@@ -105,7 +105,7 @@ cdef class POMCP(POUCT):
         if not isinstance(agent.belief, Particles):
             raise TypeError("agent's belief is not represented in particles.\n"\
                             "POMCP not usable. Please convert it to particles.")
-        if not hasattr(agent, "tree"):
+        if not hasattr(agent, "tree") or agent.tree is None:
             print("Warning: agent does not have tree. Have you planned yet?")
             return
 
@@ -129,6 +129,8 @@ cdef class POMCP(POUCT):
                     State state, tuple history, VNode root, QNode parent,
                     Observation observation, int depth):
         total_reward = POUCT._simulate(self, state, history, root, parent, observation, depth)
+        #here it don't need update all vnode belief,only update second layer vnode belif
+        #because next prune tree,only keep second layer relevant vnode as new search tree rootvnode. 
         if depth == 1 and root is not None:
             root.belief.add(state)  # belief update happens as simulation goes.
         return total_reward
