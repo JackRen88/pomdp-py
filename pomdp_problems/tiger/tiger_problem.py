@@ -327,6 +327,7 @@ def main():
 
     print("** Testing POMCP **")
     tiger_problem.agent.set_belief(pomdp_py.Particles.from_histogram(init_belief, num_particles=100), prior=True)
+    # num_sims == num episodes more num_sims,more particles,more accurate belief state
     pomcp = pomdp_py.POMCP(max_depth=3, discount_factor=0.95,
                            num_sims=1000, exploration_const=50,
                            rollout_policy=tiger_problem.agent.policy_model,

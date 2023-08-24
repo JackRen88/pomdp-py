@@ -239,6 +239,10 @@ cdef class POUCT(Planner):
         self._agent = agent   # switch focus on planning for the given agent
         if not hasattr(self._agent, "tree"):
             self._agent.add_attr("tree", None)
+        # if agent.tree is None:
+        #   print("agent not tree!")
+        # else:
+        #   print("agent has tree!")
         action, time_taken, sims_count = self._search()
         self._last_num_sims = sims_count
         self._last_planning_time = time_taken

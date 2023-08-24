@@ -19,7 +19,14 @@ This version is also implemented in BasicPOMCP.jl
 The two should be EQUIVALENT. In general, it doesn't
 hurt to do the belief update during MCTS, a feature
 of using particle representation.
+According to the effect of running this algorithm(belief
+update happens as the simulation progresses),for belief update process,I prefer to use the method 
+that separate MCTS completely from the belief update
 """
+'''One thing to note is that,for large pomdp problem,its state/action/observation space 
+is too big that computation cost about using Bayes to update belief is large,so we approximate the
+belief state using an unweighted particle filte.
+'''
 
 from pomdp_py.framework.basics cimport Action, Agent, POMDP, State, Observation,\
     ObservationModel, TransitionModel, GenerativeDistribution, PolicyModel
@@ -109,21 +116,22 @@ cdef class POMCP(POUCT):
             print("Warning: agent does not have tree. Have you planned yet?")
             return
 
-        if agent.tree[real_action][real_observation] is None:
+        if agent.tree[real_action][real_observation] is not None:
+          # Update the tree; Reinvigorate the tree's belief and use it
+          # as the updated belief for the agent.
+          agent.tree = RootVNodeParticles.from_vnode(agent.tree[real_action][real_observation],
+                                                   agent.history)
+
+          tree_belief = agent.tree.belief
+          agent.set_belief(particle_reinvigoration(tree_belief,
+                                                  len(agent.init_belief.particles),
+                                                  state_transform_func=state_transform_func))
+
+          agent.tree.belief = copy.deepcopy(agent.belief)
+        else:
             # Never anticipated the real_observation. No reinvigoration can happen.
             raise ValueError("Particle deprivation.")
-        # Update the tree; Reinvigorate the tree's belief and use it
-        # as the updated belief for the agent.
-        agent.tree = RootVNodeParticles.from_vnode(agent.tree[real_action][real_observation],
-                                                   agent.history)
-        tree_belief = agent.tree.belief
-        agent.set_belief(particle_reinvigoration(tree_belief,
-                                                 len(agent.init_belief.particles),
-                                                 state_transform_func=state_transform_func))
-        # If observation was never encountered in simulation, then tree will be None;
-        # particle reinvigoration will occur.
-        if agent.tree is not None:
-            agent.tree.belief = copy.deepcopy(agent.belief)
+
 
     cpdef _simulate(POMCP self,
                     State state, tuple history, VNode root, QNode parent,
