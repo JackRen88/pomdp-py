@@ -19,9 +19,10 @@ This version is also implemented in BasicPOMCP.jl
 The two should be EQUIVALENT. In general, it doesn't
 hurt to do the belief update during MCTS, a feature
 of using particle representation.
+
 According to the effect of running this algorithm(belief
 update happens as the simulation progresses),for belief update process,I prefer to use the method 
-that separate MCTS completely from the belief update
+that separate MCTS completely from the belief update,such as DESPOT algorithms.
 """
 '''One thing to note is that,for large pomdp problem,its state/action/observation space 
 is too big that computation cost about using Bayes to update belief is large,so we approximate the
