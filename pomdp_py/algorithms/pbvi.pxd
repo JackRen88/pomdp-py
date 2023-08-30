@@ -6,3 +6,7 @@ cdef class PBVI(Planner):
   cdef list _belief_points
   cdef list _alpha_vectors
   cdef int _max_length
+
+  cpdef _value_backup(self,list belief_points,list alpha_vectors)
+
+  cpdef _expansion_belief(self,list belief_points,list alpha_vectors)

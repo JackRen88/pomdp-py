@@ -2,8 +2,8 @@
 Copyright (c) 2023 by GAC, All Rights Reserved. 
 Author: renchengjin
 Date: 2023-08-07 09:51:00
-LastEditors: JackRen
-LastEditTime: 2023-08-07 13:39:54
+LastEditors: JackRen88
+LastEditTime: 2023-08-30 20:38:02
 Description: 
 '''
 import pomdp_py.utils as util
@@ -26,6 +26,7 @@ from pomdp_py.utils.interfaces.solvers import vi_pruning, sarsop
 from pomdp_py.algorithms.value_iteration import ValueIteration  # Cython compiled
 from pomdp_py.algorithms.value_function import value, qvalue, belief_update
 from pomdp_py.algorithms.pomcp import POMCP
+from pomdp_py.algorithms.pbvi import PBVI
 from pomdp_py.algorithms.po_rollout import PORollout
 from pomdp_py.algorithms.po_uct import POUCT, QNode, VNode, RootVNode,\
     RolloutPolicy, RandomRollout, ActionPrior
