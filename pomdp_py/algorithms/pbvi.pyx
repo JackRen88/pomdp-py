@@ -38,8 +38,8 @@ cdef class PBVI(Planner):
 
       for _ in range(self._expansions_num):
         for _ in range(self._iter_horizon):
-          self.value_backup(self._belief_points,self._alpha_vectors)
-        new_beliefs = self.expansion_belief(self._belief_points,self._alpha_vectors)
+          self._value_backup(self._belief_points,self._alpha_vectors)
+        new_beliefs = self._expansion_belief(self._belief_points,self._alpha_vectors)
         self._belief_points = self._belief_points + new_beliefs
       # self._agent = agent   # switch focus on planning for the given agent
       # if not hasattr(self._agent, "tree"):
@@ -48,4 +48,16 @@ cdef class PBVI(Planner):
       # action, time_taken, sims_count = self._search()
       # self._last_num_sims = sims_count
       # self._last_planning_time = time_taken
-      return action
+      # return action
+
+
+  cpdef _value_backup(self,list belief_points,list alpha_vectors):
+    """
+    """
+    pass
+
+
+  cpdef _expansion_belief(self,list belief_points,list alpha_vectors):
+    """
+    """
+    pass
