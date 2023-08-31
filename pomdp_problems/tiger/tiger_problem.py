@@ -313,7 +313,7 @@ def main():
     tiger_problem.agent.set_belief(init_belief, prior=True)
 
     pomdp_py.PBVI(belief_points=[init_belief], alpha_vectors=[[0 for _ in range(len(init_belief))]],
-                  expansions_num=100, iter_horizon=50)
+                  expansions_num=100, iter_horizon=50,discount_factor=0.95)
 
     # print("\n** Testing POUCT **")
     # Reset agent belief
