@@ -16,6 +16,7 @@ from pomdp_py.framework.basics cimport Action, Agent, POMDP, State, Observation,
 from pomdp_py.representations.distribution.histogram cimport Histogram   
 import time
 import pomdp_py
+import numpy as np
 
 cdef class PBVI(Planner):
   """
@@ -88,12 +89,14 @@ cdef class PBVI(Planner):
     """
     """
     cdef float max_value = float("-inf")
-    cdef list best_alpta_vector
+    cdef list best_alpta_vector = []
     cdef list states = self._agent.transition_model.get_all_states
     cdef int best_action_index = 0
     cdef int index = 0
+    cdef float value = 0.0
+
     for alpha_vector in alpha_vectors:
-      cdef float value = 0.0
+      value = 0.0
       for i in range(len(alpha_vector)):
         value += b[states[i]] * alpha_vector[i]
       if value > max_value:
@@ -109,25 +112,30 @@ cdef class PBVI(Planner):
     """
     """
     #fisrt step
-    cdef dict action_set
-    cdef float reward
+    cdef dict action_set = {}
+    cdef list state_rewards = []
     for a in self._agent.policy_model.get_all_actions:
-      cdef list state_rewards
+      state_rewards = []
       for s in self._agent.transition_model.get_all_states:
-          reward = self._agent.reward_model.sample(s,a)
-          state_rewards.append(reward)
+        reward = self._agent.reward_model.sample(s,a)
+        state_rewards.append(reward)
       action_set[a] = state_rewards
     
     #time complexity |A||O||V'|*|S|^2
-    cdef dict acion_observation_alpha_vectors_set
+    cdef dict acion_observation_alpha_vectors_set = {}
+    cdef list alpha_vectors = []
+    cdef list alpha_vector = []
+    cdef float total_reward = 0.0
+    cdef int state_index = 0
+
     for a in self._agent.policy_model.get_all_actions:
       for o in self._agent.observation_model.get_all_observations:         
-        cdef list alpha_vectors
+        alpha_vectors = []
         for prev_alpha_vector in prev_alpha_vectors:
-          cdef list alpha_vector
+          alpha_vector = []
           for s in self._agent.transition_model.get_all_states:
-            cdef float total_reward  = 0.0
-            cdef int state_index = 0
+            total_reward  = 0.0
+            state_index = 0
             for s1 in self._agent.transition_model.get_all_states:
               total_reward += self._agent.transition_model.probability(s1,s,a)*self._agent.observation_model.probability(o,s1,a)*prev_alpha_vector[state_index]
               state_index += 1
@@ -138,30 +146,27 @@ cdef class PBVI(Planner):
     #second step
     #because b is belief state, b is not suitable as an index
     #so,use integer index
-    cdef dict  belief_actions
+    cdef dict belief_actions = {}
     cdef int index = 0 
-    cdef list alpha_vector
     for b in belief_points:
       for a in self._agent.policy_model.get_all_actions:
         alpha_vector = action_set[a]
         for o in self._agent.observation_model.get_all_observations:  
-          cdef list best_vector
-          best_vector,_ = self._argmax(acion_observation_alpha_vectors_set[(a,o)],b)  
+          best_vector, _ = self._argmax(acion_observation_alpha_vectors_set[(a,o)],b)  
 
-          assert len(action_set[a]) == best_vector,"Adding vectors must have equal dimensions"
+          assert len(alpha_vector) == len(best_vector),"Adding vectors must have equal dimensions"
 
-          alpha_vector = list(map(lambda x :x[0]+x[1] ,zip(alpha_vector,best_vector)))
+          alpha_vector = list(np.array(alpha_vector) + np.array(best_vector))
         belief_actions[(index,a)]= alpha_vector
       index += 1
       
     #third step
-    cdef list cur_alpha_vectors
-    cdef list best_alpha_vector
-    cdef int best_action_index = 0
-    cdef list actions_related_for_alpha_vectors
+    cdef list cur_alpha_vectors = []
+    cdef list actions_related_for_alpha_vectors = []
+    cdef list vectors = []
     index = 0
     for b in belief_points:
-      cdef list vectors
+      vectors = []
       for a in self._agent.policy_model.get_all_actions:
         vectors.append(belief_actions[(index,a)])
       best_alpha_vector,best_action_index = self._argmax(vectors,b)
@@ -174,14 +179,16 @@ cdef class PBVI(Planner):
   cpdef _expansion_belief(self,list belief_points,list alpha_vectors):
     """
     """
-    cdef list expanded_belief_points
+    cdef list expanded_belief_points = []
+    cdef Histogram expanded_belief
+    cdef float max_dis = float("-inf")
+
     for b in belief_points:
       state = b.random()
-      cdef float max_dis = float("-inf")
-      cdef Histogram expanded_belief
+      max_dis = float("-inf")
       for action in self._agent.policy_model.get_all_actions:
         next_state, observation, reward, _ = sample_generative_model(self._agent, state, action)
-        next_belief = new_belief = pomdp_py.update_histogram_belief(b,
+        next_belief = pomdp_py.update_histogram_belief(b,
                 action, observation,
                 self._agent.observation_model,
                 self._agent.transition_model)
@@ -202,8 +209,10 @@ cdef class PBVI(Planner):
     L1 distance
     """
     cdef float min_dis = float("inf")
+    cdef float dis = 0.0
+
     for tmp_b in belief_points:
-      cdef float dis = 0.0
+      dis = 0.0
       for s in self._agent.transition_model.get_all_states:
         dis += abs(tmp_b[s] - b[s])
       if dis < min_dis:
