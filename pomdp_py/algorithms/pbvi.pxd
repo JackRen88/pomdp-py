@@ -11,8 +11,10 @@ cdef class PBVI(Planner):
   cdef int _max_length
   cdef Agent _agent
 
-  cpdef _argmax(self,list alpha_vectors,Histogram b)
+  cpdef _argmax(self, list alpha_vectors,Histogram b)
 
-  cpdef _value_backup(self,list belief_points,list prev_alpha_vectors)
+  cpdef _value_backup(self, list belief_points,list prev_alpha_vectors)
 
-  cpdef _expansion_belief(self,list belief_points,list alpha_vectors)
+  cpdef _expansion_belief(self, list belief_points,list alpha_vectors)
+
+  cpdef _distance(self, list belief_points, Histogram b)
