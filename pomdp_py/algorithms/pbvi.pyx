@@ -14,6 +14,7 @@ from pomdp_py.framework.basics cimport Action, Agent, POMDP, State, Observation,
     ObservationModel, TransitionModel,RewardModel, GenerativeDistribution, PolicyModel,\
     sample_generative_model
 from pomdp_py.representations.distribution.histogram cimport Histogram   
+import time
 
 cdef class PBVI(Planner):
   """
@@ -38,21 +39,26 @@ cdef class PBVI(Planner):
   cpdef public plan(self, Agent agent):
       cdef Action action
       cdef float time_taken
-      cdef int sims_count
 
       self._agent = agent   # switch focus on planning for the given agent
 
+      start_time = time.time()
       for _ in range(self._expansions_num):
         for _ in range(self._iter_horizon):
           self._alpha_vectors = self._value_backup(self._belief_points,self._alpha_vectors)
 
         new_beliefs = self._expansion_belief(self._belief_points,self._alpha_vectors)
+        #notice: no prune away the same two belief points.and test that add or not to 
+        # other zero alpha vector corrspond to expanded beief point
         self._belief_points = self._belief_points + new_beliefs
+        # assert len(self._belief_points) == len(self._alpha_vectors),"the number of the belief\
+        # points must be the same with the number of alpha vectors"
+        
+      time_taken = time.time() - start_time
+      print("PBVI's time taken: {}".format(time_taken))
 
-      # action, time_taken, sims_count = self._search()
-      # self._last_num_sims = sims_count
-      # self._last_planning_time = time_taken
-      # return action
+
+      return action
 
   cpdef _argmax(self,list alpha_vectors,Histogram b):
     """
@@ -119,10 +125,24 @@ cdef class PBVI(Planner):
       index += 1
       
     #third step
+    cdef list cur_alpha_vectors
+    cdef list best_alpha_vector
+    index = 0
+    for b in belief_points:
+      cdef list vectors
+      for a in self._agent.policy_model.get_all_actions:
+        vectors.append(belief_actions[(index,a)])
+      best_alpha_vector = self._argmax(vectors,b)
+      cur_alpha_vectors.append(best_alpha_vector)
+      index += 1
 
-
+    return cur_alpha_vectors
 
   cpdef _expansion_belief(self,list belief_points,list alpha_vectors):
     """
     """
-    pass
+    
+    for b in belief_points:
+      cdef State state = b.random()
+      for a in self._agent.policy_model.get_all_actions:
+        next_state, = self._agent.
