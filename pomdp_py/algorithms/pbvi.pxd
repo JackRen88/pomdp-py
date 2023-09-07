@@ -7,9 +7,11 @@ cdef class PBVI(Planner):
   cdef int _iter_horizon
   cdef list _belief_points
   cdef list _alpha_vectors
+  cdef list _related_actions_index
   cdef float _discount_factor
   cdef int _max_length
   cdef Agent _agent
+  cdef bint _enable_learning
 
   cpdef _best_action(self, list alpha_vectors, list related_actions_index, Histogram cur_b)
 

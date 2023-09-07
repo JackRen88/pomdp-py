@@ -313,7 +313,7 @@ def main():
     tiger_problem.agent.set_belief(init_belief, prior=True)
 
     pbvi = pomdp_py.PBVI(belief_points=[init_belief], alpha_vectors=[[0 for _ in range(len(init_belief))]],
-                  expansions_num=100, iter_horizon=50,discount_factor=0.95)
+                         expansions_num=20, iter_horizon=50, discount_factor=0.95, max_length=100)
 
     test_planner(tiger_problem, pbvi, nsteps=10)
     # print("\n** Testing POUCT **")
@@ -332,7 +332,7 @@ def main():
 
     # print("** Testing POMCP **")
     # tiger_problem.agent.set_belief(pomdp_py.Particles.from_histogram(init_belief, num_particles=100), prior=True)
-    # # num_sims == num episodes more num_sims,more particles,more accurate belief state
+    """ num_sims == num episodes more num_sims,more particles,more accurate belief state """
     # pomcp = pomdp_py.POMCP(max_depth=3, discount_factor=0.95,
     #                        num_sims=1000, exploration_const=50,
     #                        rollout_policy=tiger_problem.agent.policy_model,
