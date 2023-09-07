@@ -23,6 +23,7 @@ Transition:
 Observation:
     crying when hungry: 0.8
     crying when full: 0.1
+    
 Note that in this example, the CryingBabyProblem is a POMDP that
 also contains the agent and the environment as its fields. In
 general this doesn't need to be the case. (Refer to more
@@ -327,17 +328,26 @@ def main():
                                  init_true_state, init_belief)
 
     # print("** Testing value iteration **")
-    #horizon is too large to compute expensive ,
-    # because layer level of tree is too big,
-    # resulting in getting too much policy tree,so need to prune tree.
-    # here in general,horizon = 3
+    """     
+        horizon is too large to compute expensive ,
+        because layer level of tree is too big,
+        resulting in getting too much policy tree,so need to prune tree.
+        here in general,horizon = 3
+    """
     # vi = pomdp_py.ValueIteration(horizon=3, discount_factor=0.95)
     # test_planner(crying_baby_problem, vi, nsteps=10)
 
-    # Reset agent belief
-    # crying_baby_problem.agent.set_belief(init_belief, prior=True)
+    print("** Testing point-based value iteration **")
+    crying_baby_problem.agent.set_belief(init_belief, prior=True)
+
+    pbvi = pomdp_py.PBVI(belief_points=[init_belief], alpha_vectors=[[0 for _ in range(len(init_belief))]],
+                         expansions_num=20, iter_horizon=50, discount_factor=0.95, max_length=100)
+
+    test_planner(crying_baby_problem, pbvi, nsteps=10)
 
     # print("\n** Testing POUCT **")
+    # Reset agent belief
+    # crying_baby_problem.agent.set_belief(init_belief, prior=True)
     # pouct = pomdp_py.POUCT(max_depth=5, discount_factor=0.95,
     #                        num_sims=4096, exploration_const=50,
     #                        rollout_policy=crying_baby_problem.agent.policy_model,
@@ -347,15 +357,15 @@ def main():
 
     # # Reset agent belief
     # crying_baby_problem.agent.set_belief(init_belief, prior=True)
-    crying_baby_problem.agent.tree = None
+    # crying_baby_problem.agent.tree = None
 
-    print("** Testing POMCP **")
-    crying_baby_problem.agent.set_belief(pomdp_py.Particles.from_histogram(init_belief, num_particles=100), prior=True)
-    pomcp = pomdp_py.POMCP(max_depth=5, discount_factor=0.95,
-                           num_sims=3000, exploration_const=50,
-                           rollout_policy=crying_baby_problem.agent.policy_model,
-                           show_progress=True, pbar_update_interval=500)
-    test_planner(crying_baby_problem, pomcp, nsteps=10)
+    # print("** Testing POMCP **")
+    # crying_baby_problem.agent.set_belief(pomdp_py.Particles.from_histogram(init_belief, num_particles=100), prior=True)
+    # pomcp = pomdp_py.POMCP(max_depth=5, discount_factor=0.95,
+    #                        num_sims=3000, exploration_const=50,
+    #                        rollout_policy=crying_baby_problem.agent.policy_model,
+    #                        show_progress=True, pbar_update_interval=500)
+    # test_planner(crying_baby_problem, pomcp, nsteps=10)
     # TreeDebugger(tiger_problem.agent.tree).pp
 
 if __name__ == '__main__':

@@ -20,13 +20,14 @@ import numpy as np
 
 cdef class PBVI(Planner):
   """
-  This is a offline  approximations method for POMDP.
+  This is a offline approximations value iteration method for POMDP.
+  its computation cost is too large,so can't be computed online
   Args:
   belief_points:
   alpha_vectors:
   expansions_num:
   iter_horizon:
-  max_length:belif point set size
+  max_length:belif point set max size,consider computation time
   """
   def __init__(self,belief_points,alpha_vectors,expansions_num,iter_horizon,discount_factor=0.9,max_length=100):
     self._belief_points = belief_points
@@ -36,29 +37,34 @@ cdef class PBVI(Planner):
     self._discount_factor = discount_factor
     self._max_length = max_length
 
-    self._related_actions_index = None
+    self._related_actions_index = []
     self._agent = None
+    self._enable_learning = True
+
+    super().__init__("PBVI")
 
   cpdef public plan(self, Agent agent):
       cdef Action action
       cdef float time_taken
 
-      self._agent = agent   # switch focus on planning for the given agent
-
+      self._agent = agent   
       start_time = time.time()
-      for _ in range(self._expansions_num):
-        for _ in range(self._iter_horizon):
-          self._alpha_vectors, self._related_actions_index  = self._value_backup(self._belief_points,self._alpha_vectors)
+      if self._enable_learning:
+        self._enable_learning = False
+        for _ in range(self._expansions_num):
+          for _ in range(self._iter_horizon):
+            self._alpha_vectors, self._related_actions_index  = self._value_backup(self._belief_points,self._alpha_vectors)
 
-        new_beliefs = self._expansion_belief(self._belief_points,self._alpha_vectors)
-        #notice: no prune away the same two belief points.and test that add or not to 
-        # other zero alpha vector corrspond to expanded beief point
-        self._belief_points = self._belief_points + new_beliefs
-        # assert len(self._belief_points) == len(self._alpha_vectors),"the number of the belief\
-        # points must be the same with the number of alpha vectors"
+          if len(self._belief_points) < self._max_length:
+            new_beliefs = self._expansion_belief(self._belief_points,self._alpha_vectors)
+            #notice: test that add or not to 
+            # other zero alpha vector corrspond to expanded beief point
+            self._belief_points = self._belief_points + new_beliefs
+            # assert len(self._belief_points) == len(self._alpha_vectors),"the number of the belief\
+            # points must be the same with the number of alpha vectors"
         
-      time_taken = time.time() - start_time
-      print("PBVI's time taken: {}".format(time_taken))
+        time_taken = time.time() - start_time
+        print("PBVI's time taken: {}".format(time_taken))
 
       action = self._best_action(self._alpha_vectors, self._related_actions_index, self._agent.cur_belief)
       return action
@@ -69,7 +75,7 @@ cdef class PBVI(Planner):
     cdef float max_value = float("-inf")
     cdef int index = 0
     cdef int best_alpha_vector_index = 0
-    cdef list states = self._agent.transition_model.get_all_states
+    cdef list states = self._agent.transition_model.get_all_states()
     cdef float value
     for alpha_vector in alpha_vectors:
       value = 0.0
@@ -81,7 +87,7 @@ cdef class PBVI(Planner):
 
       index += 1
 
-    action = self._agent.policy_model.get_all_actions[related_actions_index[best_alpha_vector_index]]
+    action = self._agent.all_actions[related_actions_index[best_alpha_vector_index]]
 
     return action
 
@@ -90,7 +96,7 @@ cdef class PBVI(Planner):
     """
     cdef float max_value = float("-inf")
     cdef list best_alpta_vector = []
-    cdef list states = self._agent.transition_model.get_all_states
+    cdef list states = self._agent.transition_model.get_all_states()
     cdef int best_action_index = 0
     cdef int index = 0
     cdef float value = 0.0
@@ -114,10 +120,10 @@ cdef class PBVI(Planner):
     #fisrt step
     cdef dict action_set = {}
     cdef list state_rewards = []
-    for a in self._agent.policy_model.get_all_actions:
+    for a in self._agent.policy_model.get_all_actions():
       state_rewards = []
-      for s in self._agent.transition_model.get_all_states:
-        reward = self._agent.reward_model.sample(s,a)
+      for s in self._agent.transition_model.get_all_states():
+        reward = self._agent.reward_model.sample(s,a,None)
         state_rewards.append(reward)
       action_set[a] = state_rewards
     
@@ -128,15 +134,15 @@ cdef class PBVI(Planner):
     cdef float total_reward = 0.0
     cdef int state_index = 0
 
-    for a in self._agent.policy_model.get_all_actions:
-      for o in self._agent.observation_model.get_all_observations:         
+    for a in self._agent.policy_model.get_all_actions():
+      for o in self._agent.observation_model.get_all_observations():         
         alpha_vectors = []
         for prev_alpha_vector in prev_alpha_vectors:
           alpha_vector = []
-          for s in self._agent.transition_model.get_all_states:
+          for s in self._agent.transition_model.get_all_states():
             total_reward  = 0.0
             state_index = 0
-            for s1 in self._agent.transition_model.get_all_states:
+            for s1 in self._agent.transition_model.get_all_states():
               total_reward += self._agent.transition_model.probability(s1,s,a)*self._agent.observation_model.probability(o,s1,a)*prev_alpha_vector[state_index]
               state_index += 1
             alpha_vector.append(self._discount_factor * total_reward)
@@ -149,9 +155,9 @@ cdef class PBVI(Planner):
     cdef dict belief_actions = {}
     cdef int index = 0 
     for b in belief_points:
-      for a in self._agent.policy_model.get_all_actions:
+      for a in self._agent.policy_model.get_all_actions():
         alpha_vector = action_set[a]
-        for o in self._agent.observation_model.get_all_observations:  
+        for o in self._agent.observation_model.get_all_observations():  
           best_vector, _ = self._argmax(acion_observation_alpha_vectors_set[(a,o)],b)  
 
           assert len(alpha_vector) == len(best_vector),"Adding vectors must have equal dimensions"
@@ -167,7 +173,7 @@ cdef class PBVI(Planner):
     index = 0
     for b in belief_points:
       vectors = []
-      for a in self._agent.policy_model.get_all_actions:
+      for a in self._agent.policy_model.get_all_actions():
         vectors.append(belief_actions[(index,a)])
       best_alpha_vector,best_action_index = self._argmax(vectors,b)
       cur_alpha_vectors.append(best_alpha_vector)
@@ -183,10 +189,13 @@ cdef class PBVI(Planner):
     cdef Histogram expanded_belief
     cdef float max_dis = float("-inf")
 
+    print("belief point size: ",len(belief_points))
     for b in belief_points:
+      # print("belief point is empty: ",len(b) == 0)
       state = b.random()
       max_dis = float("-inf")
-      for action in self._agent.policy_model.get_all_actions:
+      expanded_belief = Histogram({})
+      for action in self._agent.policy_model.get_all_actions():
         next_state, observation, reward, _ = sample_generative_model(self._agent, state, action)
         next_belief = pomdp_py.update_histogram_belief(b,
                 action, observation,
@@ -195,10 +204,14 @@ cdef class PBVI(Planner):
 
         if next_belief in belief_points:
           continue
-        
+        # print("next belief is empty: ",len(next_belief) == 0)
         dis = self._distance(belief_points, next_belief)
         if dis > max_dis:
           expanded_belief = next_belief
+          max_dis = dis
+        # print("expanded belief is empty: ",len(expanded_belief) == 0)
+      if len(expanded_belief) == 0:
+        continue
 
       expanded_belief_points.append(expanded_belief)
 
@@ -213,7 +226,7 @@ cdef class PBVI(Planner):
 
     for tmp_b in belief_points:
       dis = 0.0
-      for s in self._agent.transition_model.get_all_states:
+      for s in self._agent.transition_model.get_all_states():
         dis += abs(tmp_b[s] - b[s])
       if dis < min_dis:
         min_dis = dis
